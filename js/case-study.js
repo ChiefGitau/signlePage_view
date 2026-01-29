@@ -1,7 +1,7 @@
 // Case Study Animations
 document.addEventListener('DOMContentLoaded', function() {
 
-    // Intersection Observer for triggering animations when elements come into view
+    // Intersection Observer 
     const observerOptions = {
         threshold: 0.3,
         rootMargin: '0px 0px -100px 0px'
@@ -10,8 +10,32 @@ document.addEventListener('DOMContentLoaded', function() {
     // Animate Bar Charts
     function animateBarChart(barFill) {
         const value = parseFloat(barFill.getAttribute('data-value'));
-        const maxValue = 10; // Max conversion rate for scaling
-        const percentage = (value / maxValue) * 100;
+        let percentage;
+
+        // On mobile, scale bars relative to the max in their section for better space utilization
+        const isMobile = window.innerWidth <= 767;
+        if (isMobile) {
+            // Find the max value in this chart section
+            const chartSection = barFill.closest('.chart-bars');
+            const allBars = chartSection.querySelectorAll('.bar-fill');
+            let sectionMax = 0;
+            allBars.forEach(bar => {
+                const barValue = parseFloat(bar.getAttribute('data-value'));
+                if (barValue > sectionMax) sectionMax = barValue;
+            });
+
+            // Scale relative to section max (largest bar = 100%)
+            percentage = (value / sectionMax) * 100;
+
+            // Ensure minimum visibility for small values
+            if (percentage < 30) {
+                percentage = Math.max(percentage * 1.5, 30);
+            }
+        } else {
+            // Desktop: use absolute scale (max 10%)
+            const maxValue = 10;
+            percentage = (value / maxValue) * 100;
+        }
 
         setTimeout(() => {
             barFill.style.width = percentage + '%';
@@ -21,9 +45,25 @@ document.addEventListener('DOMContentLoaded', function() {
     // Animate Circular Progress
     function animateCircle(circle) {
         const percent = parseFloat(circle.getAttribute('data-percent'));
-        const radius = 65;
+
+        // Get radius from the circle element or calculate from viewport
+        let radius = parseFloat(circle.getAttribute('r')) || 85;
+
+        // Adjust radius for mobile if CSS has changed it
+        const isMobile = window.innerWidth <= 767;
+        const isSmallMobile = window.innerWidth <= 480;
+
+        if (isSmallMobile) {
+            radius = 55;
+        } else if (isMobile) {
+            radius = 65;
+        }
+
         const circumference = 2 * Math.PI * radius;
         const offset = circumference - (percent / 10) * circumference; // Divide by 10 for scale
+
+        // Update stroke-dasharray as well to match new radius
+        circle.style.strokeDasharray = circumference;
 
         setTimeout(() => {
             circle.style.strokeDashoffset = offset;
@@ -67,6 +107,35 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }, observerOptions);
+
+    // Handle window resize to recalculate bar widths and circles
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            // Recalculate all visible bars
+            const conversionCharts = document.querySelectorAll('.conversion-chart');
+            conversionCharts.forEach(chart => {
+                const barFills = chart.querySelectorAll('.bar-fill');
+                barFills.forEach(bar => {
+                    if (bar.style.width && bar.style.width !== '0%') {
+                        animateBarChart(bar);
+                    }
+                });
+            });
+
+            // Recalculate circles
+            const metricsVisual = document.querySelector('.metrics-visual');
+            if (metricsVisual) {
+                const circles = metricsVisual.querySelectorAll('.circle-progress');
+                circles.forEach(circle => {
+                    if (circle.style.strokeDashoffset) {
+                        animateCircle(circle);
+                    }
+                });
+            }
+        }, 250);
+    });
 
     // Observer for circular progress
     const circleObserver = new IntersectionObserver((entries) => {
@@ -133,8 +202,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (svgPath) {
             const pathLength = 6200;
 
-            // Check if browser supports scroll-driven animations
-            // Most browsers don't support this yet, so we'll use JS fallback for now
             const supportsScrollTimeline = false; // Force JS control for reliability
 
             if (!supportsScrollTimeline) {
@@ -164,11 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const currentScroll = windowHeight - sectionTop;
                     progress = Math.max(0, Math.min(1, currentScroll / totalScrollDistance));
 
-                    // Add delay - animation starts at 20% of scroll progress
-                    // Phase 1 (20% - 60%): Draw the line
-                    // Phase 2 (60% - 70%): Line stays fully visible
-                    // Phase 3 (70% - 95%): Line exits off the left (moves entire line off screen)
-                    // Phase 4 (95% - 100%): Fade out
+                   
                     let offset = pathLength;
                     let opacity = 0.5;
 

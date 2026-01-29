@@ -185,15 +185,6 @@ function initBackToTop() {
     button.className = 'back-to-top btn btn-primary';
     button.innerHTML = '↑';
     button.style.display = 'none';
-    button.style.position = 'fixed';
-    button.style.bottom = '50px';
-    button.style.right = '50px';
-    button.style.zIndex = '1000';
-    button.style.borderRadius = '50%';
-    button.style.width = '75px';
-    button.style.height = '75px';
-    button.style.fontSize = '18px';
-    button.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
 
     document.body.appendChild(button);
 
