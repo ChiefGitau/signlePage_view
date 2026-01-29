@@ -176,35 +176,6 @@ function initParallax() {
     });
 }
 
-/**
- * Back to Top Button
- */
-function initBackToTop() {
-    // Create button
-    const button = document.createElement('button');
-    button.className = 'back-to-top btn btn-primary';
-    button.innerHTML = '↑';
-    button.style.display = 'none';
-
-    document.body.appendChild(button);
-
-    // Show/hide on scroll
-    window.addEventListener('scroll', () => {
-        if (window.pageYOffset > 300) {
-            button.style.display = 'block';
-        } else {
-            button.style.display = 'none';
-        }
-    });
-
-    // Scroll to top on click
-    button.addEventListener('click', () => {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    });
-}
 
 // Initialize back to top button
 document.addEventListener('DOMContentLoaded', initBackToTop);
